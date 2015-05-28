@@ -17,9 +17,13 @@
  *
  * @package WordPress
  */
-
-// ** MySQL settings - You can get this info from your web host ** //
-/** The name of the database for WordPress */
+if(file_exists($localConfig)) {
+ require_once($localConfig);
+ } else {
+ 	/* 
+ 	Default settings. 
+ 	To override these with your local DB settings, create a file in ./config/ named after your hostname ([HOSTNAME].inc) and include the following four definitions.
+ */
 define('DB_NAME', 'carmancreative_database');
 
 /** MySQL database username */
@@ -30,6 +34,10 @@ define('DB_PASSWORD', '');
 
 /** MySQL hostname */
 define('DB_HOST', '127.0.0.1');
+ }
+// ** MySQL settings - You can get this info from your web host ** //
+/** The name of the database for WordPress */
+
 
 /** Database Charset to use in creating database tables. */
 define('DB_CHARSET', 'utf8mb4');
