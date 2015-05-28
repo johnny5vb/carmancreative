@@ -17,6 +17,7 @@
  *
  * @package WordPress
  */
+ localConfig = ABSPATH."/config/".gethostname().'.inc';
 if(file_exists($localConfig)) {
  require_once($localConfig);
  } else {
