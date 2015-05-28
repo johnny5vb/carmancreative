@@ -16,12 +16,9 @@
  */
 class WP_Image_Editor_Imagick extends WP_Image_Editor {
 	/**
-	 * Imagick object.
-	 *
-	 * @access protected
 	 * @var Imagick
 	 */
-	protected $image;
+	protected $image; // Imagick Object
 
 	public function __destruct() {
 		if ( $this->image instanceof Imagick ) {
@@ -40,7 +37,6 @@ class WP_Image_Editor_Imagick extends WP_Image_Editor {
 	 * @since 3.5.0
 	 * @access public
 	 *
-	 * @param array $args
 	 * @return boolean
 	 */
 	public static function test( $args = array() ) {
@@ -116,7 +112,7 @@ class WP_Image_Editor_Imagick extends WP_Image_Editor {
 	 * @since 3.5.0
 	 * @access protected
 	 *
-	 * @return true|WP_Error True if loaded; WP_Error on failure.
+	 * @return boolean|WP_Error True if loaded; WP_Error on failure.
 	 */
 	public function load() {
 		if ( $this->image instanceof Imagick )
@@ -160,7 +156,7 @@ class WP_Image_Editor_Imagick extends WP_Image_Editor {
 	 * @access public
 	 *
 	 * @param int $quality Compression Quality. Range: [1,100]
-	 * @return true|WP_Error True if set successfully; WP_Error on failure.
+	 * @return boolean|WP_Error True if set successfully; WP_Error on failure.
 	 */
 	public function set_quality( $quality = null ) {
 		$quality_result = parent::set_quality( $quality );
@@ -194,8 +190,6 @@ class WP_Image_Editor_Imagick extends WP_Image_Editor {
 	 *
 	 * @param int $width
 	 * @param int $height
-	 *
-	 * @return true|WP_Error
 	 */
 	protected function update_size( $width = null, $height = null ) {
 		$size = null;
@@ -305,9 +299,8 @@ class WP_Image_Editor_Imagick extends WP_Image_Editor {
 			}
 
 			$resize_result = $this->resize( $size_data['width'], $size_data['height'], $size_data['crop'] );
-			$duplicate = ( ( $orig_size['width'] == $size_data['width'] ) && ( $orig_size['height'] == $size_data['height'] ) );
 
-			if ( ! is_wp_error( $resize_result ) && ! $duplicate ) {
+			if( ! is_wp_error( $resize_result ) ) {
 				$resized = $this->_save( $this->image );
 
 				$this->image->clear();
@@ -334,6 +327,7 @@ class WP_Image_Editor_Imagick extends WP_Image_Editor {
 	 * @since 3.5.0
 	 * @access public
 	 *
+	 * @param string|int $src The source file or Attachment ID.
 	 * @param int $src_x The start x position to crop from.
 	 * @param int $src_y The start y position to crop from.
 	 * @param int $src_w The width to crop.
@@ -378,7 +372,7 @@ class WP_Image_Editor_Imagick extends WP_Image_Editor {
 	 * @access public
 	 *
 	 * @param float $angle
-	 * @return true|WP_Error
+	 * @return boolean|WP_Error
 	 */
 	public function rotate( $angle ) {
 		/**
@@ -409,7 +403,7 @@ class WP_Image_Editor_Imagick extends WP_Image_Editor {
 	 *
 	 * @param boolean $horz Flip along Horizontal Axis
 	 * @param boolean $vert Flip along Vertical Axis
-	 * @returns true|WP_Error
+	 * @returns boolean|WP_Error
 	 */
 	public function flip( $horz, $vert ) {
 		try {
@@ -453,13 +447,6 @@ class WP_Image_Editor_Imagick extends WP_Image_Editor {
 		return $saved;
 	}
 
-	/**
-	 *
-	 * @param Imagick $image
-	 * @param string $filename
-	 * @param string $mime_type
-	 * @return array|WP_Error
-	 */
 	protected function _save( $image, $filename = null, $mime_type = null ) {
 		list( $filename, $extension, $mime_type ) = $this->get_output_format( $filename, $mime_type );
 
@@ -502,7 +489,7 @@ class WP_Image_Editor_Imagick extends WP_Image_Editor {
 	 * @access public
 	 *
 	 * @param string $mime_type
-	 * @return true|WP_Error
+	 * @return boolean|WP_Error
 	 */
 	public function stream( $mime_type = null ) {
 		list( $filename, $extension, $mime_type ) = $this->get_output_format( null, $mime_type );

@@ -50,14 +50,9 @@ function wp_underscore_audio_template() {
 function wp_underscore_video_template() {
 	$video_types = wp_get_video_extensions();
 ?>
-<#  var w_rule = h_rule = '', classes = [],
+<#  var w_rule = h_rule = '',
 		w, h, settings = wp.media.view.settings,
-		isYouTube = isVimeo = false;
-
-	if ( ! _.isEmpty( data.model.src ) ) {
-		isYouTube = data.model.src.match(/youtube|youtu\.be/);
-		isVimeo = -1 !== data.model.src.indexOf('vimeo');
-	}
+		isYouTube = ! _.isEmpty( data.model.src ) && data.model.src.match(/youtube|youtu\.be/);
 
 	if ( settings.contentWidth && data.model.width >= settings.contentWidth ) {
 		w = settings.contentWidth;
@@ -77,19 +72,10 @@ function wp_underscore_video_template() {
 	if ( h ) {
 		h_rule = 'height: ' + h + 'px;';
 	}
-
-	if ( isYouTube ) {
-		classes.push( 'youtube-video' );
-	}
-
-	if ( isVimeo ) {
-		classes.push( 'vimeo-video' );
-	}
-
 #>
 <div style="{{ w_rule }}{{ h_rule }}" class="wp-video">
 <video controls
-	class="wp-video-shortcode {{ classes.join( ' ' ) }}"
+	class="wp-video-shortcode{{ isYouTube ? ' youtube-video' : '' }}"
 	<# if ( w ) { #>width="{{ w }}"<# } #>
 	<# if ( h ) { #>height="{{ h }}"<# } #>
 	<?php
@@ -114,8 +100,6 @@ function wp_underscore_video_template() {
 	<# if ( ! _.isEmpty( data.model.src ) ) {
 		if ( isYouTube ) { #>
 		<source src="{{ data.model.src }}" type="video/youtube" />
-		<# } else if ( isVimeo ) { #>
-		<source src="{{ data.model.src }}" type="video/vimeo" />
 		<# } else { #>
 		<source src="{{ data.model.src }}" type="{{ settings.embedMimes[ data.model.src.split('.').pop() ] }}" />
 		<# }
@@ -136,8 +120,6 @@ function wp_underscore_video_template() {
  * Prints the templates used in the media manager.
  *
  * @since 3.5.0
- *
- * @global bool $is_IE
  */
 function wp_print_media_templates() {
 	global $is_IE;
@@ -205,7 +187,7 @@ function wp_print_media_templates() {
 			<div class="upload-ui">
 				<h3 class="upload-instructions drop-instructions"><?php _e( 'Drop files anywhere to upload' ); ?></h3>
 				<p class="upload-instructions drop-instructions"><?php _ex( 'or', 'Uploader: Drop files here - or - Select Files' ); ?></p>
-				<button type="button" class="browser button button-hero"><?php _e( 'Select Files' ); ?></button>
+				<a href="#" class="browser button button-hero"><?php _e( 'Select Files' ); ?></a>
 			</div>
 
 			<div class="upload-inline-status"></div>
@@ -275,6 +257,7 @@ function wp_print_media_templates() {
 	</script>
 
 	<script type="text/html" id="tmpl-uploader-status-error">
+		<span class="upload-error-label"><?php _e('Error'); ?></span>
 		<span class="upload-error-filename">{{{ data.filename }}}</span>
 		<span class="upload-error-message">{{ data.message }}</span>
 	</script>
@@ -330,7 +313,7 @@ function wp_print_media_templates() {
 
 				<div class="attachment-actions">
 					<# if ( 'image' === data.type && ! data.uploading && data.sizes && data.can.save ) { #>
-					<button type="button" class="button edit-attachment"><?php _e( 'Edit Image' ); ?></button>
+						<a class="button edit-attachment" href="#"><?php _e( 'Edit Image' ); ?></a>
 					<# } #>
 				</div>
 			</div>
@@ -813,9 +796,9 @@ function wp_print_media_templates() {
 	</script>
 
 	<script type="text/html" id="tmpl-embed-link-settings">
-		<label class="setting link-text">
-			<span><?php _e( 'Link Text' ); ?></span>
-			<input type="text" class="alignment" data-setting="linkText" />
+		<label class="setting title">
+			<span><?php _e( 'Title' ); ?></span>
+			<input type="text" class="alignment" data-setting="title" />
 		</label>
 		<div class="embed-container" style="display: none;">
 			<div class="embed-preview"></div>
@@ -1109,7 +1092,8 @@ function wp_print_media_templates() {
 			<div class="embed-media-settings embed-video-settings">
 				<div class="wp-video-holder">
 				<#
-				var w = ! data.model.width || data.model.width > 640 ? 640 : data.model.width,
+				var isYouTube = ! _.isEmpty( data.model.src ) && data.model.src.match(/youtube|youtu\.be/);
+					w = ! data.model.width || data.model.width > 640 ? 640 : data.model.width,
 					h = ! data.model.height ? 360 : data.model.height;
 
 				if ( data.model.width && w !== data.model.width ) {
@@ -1206,7 +1190,7 @@ function wp_print_media_templates() {
 	</script>
 
 	<script type="text/html" id="tmpl-editor-gallery">
-		<# if ( data.attachments.length ) { #>
+		<# if ( data.attachments ) { #>
 			<div class="gallery gallery-columns-{{ data.columns }}">
 				<# _.each( data.attachments, function( attachment, index ) { #>
 					<dl class="gallery-item">

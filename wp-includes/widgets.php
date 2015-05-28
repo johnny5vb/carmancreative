@@ -6,8 +6,8 @@
  * This functionality was found in a plugin before WordPress 2.2 release which
  * included it in the core from that point on.
  *
- * @link https://codex.wordpress.org/Plugins/WordPress_Widgets WordPress Widgets
- * @link https://codex.wordpress.org/Plugins/WordPress_Widgets_Api Widgets API
+ * @link http://codex.wordpress.org/Plugins/WordPress_Widgets WordPress Widgets
+ * @link http://codex.wordpress.org/Plugins/WordPress_Widgets_Api Widgets API
  *
  * @package WordPress
  * @subpackage Widgets
@@ -166,7 +166,7 @@ class WP_Widget {
 
 	/**
 	 * PHP4 constructor
-	 *
+	 * 
 	 * @param string $id_base
 	 * @param string $name
 	 * @param array  $widget_options
@@ -214,24 +214,20 @@ class WP_Widget {
 		$settings = $this->get_settings();
 		$empty = true;
 
-		// When $settings is an array-like object, get an intrinsic array for use with array_keys().
-		if ( $settings instanceof ArrayObject || $settings instanceof ArrayIterator ) {
-			$settings = $settings->getArrayCopy();
-		}
-
-		if ( is_array( $settings ) ) {
-			foreach ( array_keys( $settings ) as $number ) {
-				if ( is_numeric( $number ) ) {
-					$this->_set( $number );
-					$this->_register_one( $number );
+		if ( is_array($settings) ) {
+			foreach ( array_keys($settings) as $number ) {
+				if ( is_numeric($number) ) {
+					$this->_set($number);
+					$this->_register_one($number);
 					$empty = false;
 				}
 			}
 		}
 
 		if ( $empty ) {
-			// If there are none, we register the widget's existence with a generic template.
-			$this->_set( 1 );
+			// If there are none, we register the widget's existence with a
+			// generic template
+			$this->_set(1);
 			$this->_register_one();
 		}
 	}
@@ -298,16 +294,15 @@ class WP_Widget {
 	 * }
 	 */
 	public function display_callback( $args, $widget_args = 1 ) {
-		if ( is_numeric( $widget_args ) ) {
+		if ( is_numeric($widget_args) )
 			$widget_args = array( 'number' => $widget_args );
-		}
 
 		$widget_args = wp_parse_args( $widget_args, array( 'number' => -1 ) );
 		$this->_set( $widget_args['number'] );
-		$instances = $this->get_settings();
+		$instance = $this->get_settings();
 
-		if ( isset( $instances[ $this->number ] ) ) {
-			$instance = $instances[ $this->number ];
+		if ( array_key_exists( $this->number, $instance ) ) {
+			$instance = $instance[$this->number];
 
 			/**
 			 * Filter the settings for a particular widget instance.
@@ -429,7 +424,6 @@ class WP_Widget {
 	 * @access public
 	 *
 	 * @param int|array $widget_args Widget instance number or array of widget arguments.
-	 * @return string|null
 	 */
 	public function form_callback( $widget_args = 1 ) {
 		if ( is_numeric($widget_args) )
@@ -522,22 +516,20 @@ class WP_Widget {
 	 */
 	public function get_settings() {
 
-		$settings = get_option( $this->option_name );
+		$settings = get_option($this->option_name);
 
-		if ( false === $settings && isset( $this->alt_option_name ) ) {
-			$settings = get_option( $this->alt_option_name );
-		}
+		if ( false === $settings && isset($this->alt_option_name) )
+			$settings = get_option($this->alt_option_name);
 
-		if ( ! is_array( $settings ) && ! ( $settings instanceof ArrayObject || $settings instanceof ArrayIterator ) ) {
+		if ( !is_array($settings) )
 			$settings = array();
+
+		if ( !empty($settings) && !array_key_exists('_multiwidget', $settings) ) {
+			// old format, convert if single widget
+			$settings = wp_convert_widget_settings($this->id_base, $this->option_name, $settings);
 		}
 
-		if ( ! empty( $settings ) && ! isset( $settings['_multiwidget'] ) ) {
-			// Old format, convert if single widget.
-			$settings = wp_convert_widget_settings( $this->id_base, $this->option_name, $settings );
-		}
-
-		unset( $settings['_multiwidget'], $settings['__i__'] );
+		unset($settings['_multiwidget'], $settings['__i__']);
 		return $settings;
 	}
 }
@@ -577,7 +569,8 @@ class WP_Widget_Factory {
 	 * @param string $widget_class The name of a {@see WP_Widget} subclass.
 	 */
 	public function unregister( $widget_class ) {
-		unset( $this->widgets[ $widget_class ] );
+		if ( isset($this->widgets[$widget_class]) )
+			unset($this->widgets[$widget_class]);
 	}
 
 	/**
@@ -810,8 +803,6 @@ function register_sidebar($args = array()) {
 
 	$i = count($wp_registered_sidebars) + 1;
 
-	$id_is_empty = empty( $args['id'] );
-
 	$defaults = array(
 		'name' => sprintf(__('Sidebar %d'), $i ),
 		'id' => "sidebar-$i",
@@ -824,11 +815,6 @@ function register_sidebar($args = array()) {
 	);
 
 	$sidebar = wp_parse_args( $args, $defaults );
-
-	if ( $id_is_empty ) {
-		/* translators: 1: the id argument, 2: sidebar name, 3: recommended id value */
-		_doing_it_wrong( __FUNCTION__, sprintf( __( 'No %1$s was set in the arguments array for the "%2$s" sidebar. Defaulting to "%3$s". Manually set the %1$s to "%3$s" to silence this notice and keep existing sidebar content.' ), '<code>id</code>', $sidebar['name'], $sidebar['id'] ), '4.2.0' );
-	}
 
 	$wp_registered_sidebars[$sidebar['id']] = $sidebar;
 
@@ -858,7 +844,8 @@ function register_sidebar($args = array()) {
 function unregister_sidebar( $name ) {
 	global $wp_registered_sidebars;
 
-	unset( $wp_registered_sidebars[ $name ] );
+	if ( isset( $wp_registered_sidebars[$name] ) )
+		unset( $wp_registered_sidebars[$name] );
 }
 
 /**
@@ -899,8 +886,12 @@ function wp_register_sidebar_widget( $id, $name, $output_callback, $options = ar
 
 	$id_base = _get_widget_id_base($id);
 	if ( in_array($output_callback, $_wp_deprecated_widgets_callbacks, true) && !is_callable($output_callback) ) {
-		unset( $wp_registered_widget_controls[ $id ] );
-		unset( $wp_registered_widget_updates[ $id_base ] );
+		if ( isset($wp_registered_widget_controls[$id]) )
+			unset($wp_registered_widget_controls[$id]);
+
+		if ( isset($wp_registered_widget_updates[$id_base]) )
+			unset($wp_registered_widget_updates[$id_base]);
+
 		return;
 	}
 
@@ -1026,7 +1017,9 @@ function wp_register_widget_control( $id, $name, $control_callback, $options = a
 	}
 
 	if ( in_array($control_callback, $_wp_deprecated_widgets_callbacks, true) && !is_callable($control_callback) ) {
-		unset( $wp_registered_widgets[ $id ] );
+		if ( isset($wp_registered_widgets[$id]) )
+			unset($wp_registered_widgets[$id]);
+
 		return;
 	}
 
@@ -1559,9 +1552,8 @@ function the_widget( $widget, $instance = array(), $args = array() ) {
 	global $wp_widget_factory;
 
 	$widget_obj = $wp_widget_factory->widgets[$widget];
-	if ( ! ( $widget_obj instanceof WP_Widget ) ) {
+	if ( !is_a($widget_obj, 'WP_Widget') )
 		return;
-	}
 
 	$before_widget = sprintf('<div class="widget %s">', $widget_obj->widget_options['classname'] );
 	$default_args = array( 'before_widget' => $before_widget, 'after_widget' => "</div>", 'before_title' => '<h2 class="widgettitle">', 'after_title' => '</h2>' );
